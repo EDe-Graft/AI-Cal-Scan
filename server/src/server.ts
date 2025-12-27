@@ -25,6 +25,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }))
 
 // Health check
 app.get("/health", (req, res) => {
+  console.log("Server Health request made")
   res.json({ status: "ok", timestamp: new Date().toISOString() })
 })
 
