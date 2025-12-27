@@ -1,18 +1,23 @@
-"use client"
-
 import { useState, useRef } from "react"
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Image, Dimensions } from "react-native"
 import { CameraView, type CameraType, useCameraPermissions } from "expo-camera"
 import { useRouter } from "expo-router"
 import * as ImagePicker from "expo-image-picker"
+import * as FileSystem from "expo-file-system"
+import axios from "axios"
 import { COLORS } from "@/constants/theme"
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000"
 
+interface CapturedImage {
+  uri: string
+  base64: string | null
+}
+
 export default function Camera() {
   const [facing, setFacing] = useState<CameraType>("back")
   const [permission, requestPermission] = useCameraPermissions()
-  const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [capturedImage, setCapturedImage] = useState<CapturedImage | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const cameraRef = useRef<CameraView>(null)
   const router = useRouter()
@@ -52,7 +57,10 @@ export default function Camera() {
       })
 
       if (photo) {
-        setCapturedImage(photo.uri)
+        setCapturedImage({
+          uri: photo.uri,
+          base64: photo.base64 || null,
+        })
       }
     } catch (error) {
       console.error("Error taking picture:", error)
@@ -71,7 +79,10 @@ export default function Camera() {
       })
 
       if (!result.canceled && result.assets[0]) {
-        setCapturedImage(result.assets[0].uri)
+        setCapturedImage({
+          uri: result.assets[0].uri,
+          base64: result.assets[0].base64 || null,
+        })
       }
     } catch (error) {
       console.error("Error picking image:", error)
@@ -85,61 +96,67 @@ export default function Camera() {
     setAnalyzing(true)
 
     try {
-      // Convert image to base64 if needed
-      const response = await fetch(capturedImage)
-      const blob = await response.blob()
-      const reader = new FileReader()
+      console.log("Analyzing image")
+      let base64data: string
 
-      reader.onloadend = async () => {
-        const base64data = reader.result as string
-
-        try {
-          const aiResponse = await fetch(`${API_URL}/api/analyze-food`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              image: base64data,
-            }),
-          })
-
-          if (!aiResponse.ok) {
-            throw new Error("Failed to analyze image")
-          }
-
-          const result = await aiResponse.json()
-
-          setAnalyzing(false)
-
-          // Navigate to log meal with AI results
-          router.push({
-            pathname: "./(tabs)/log-meal",
-            params: {
-              food: result.food,
-              calories: result.calories.toString(),
-              confidence: result.confidence.toString(),
-              photoUrl: capturedImage,
-            },
-          })
-        } catch (error) {
-          setAnalyzing(false)
-          console.error("Error analyzing image:", error)
-          Alert.alert("Analysis Failed", "Could not analyze the food. Would you like to log it manually?", [
-            { text: "Cancel", style: "cancel" },
-            {
-              text: "Log Manually",
-              onPress: () => router.push("./(tabs)/log-meal"),
-            },
-          ])
-        }
+      // Use stored base64 if available, otherwise convert from URI
+      if (capturedImage.base64) {
+        base64data = `data:image/jpeg;base64,${capturedImage.base64}`
+      } else {
+        // Convert image URI to base64 using expo-file-system
+        const base64 = await FileSystem.readAsStringAsync(capturedImage.uri, {
+          encoding: "base64",
+        })
+        base64data = `data:image/jpeg;base64,${base64}`
       }
 
-      reader.readAsDataURL(blob)
+      // Use axios for API call
+      console.log("making api call")
+
+      const test = await axios.get(`${API_URL}/health`)
+      console.log(test)
+
+      const response = await axios.post<{ food: string; calories: number; confidence: number }>(
+        `${API_URL}/api/analyze-food`,
+        {
+          image: base64data,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      setAnalyzing(false)
+
+      // Navigate to log meal with AI results
+      router.push({
+        pathname: "./logmeal",
+        params: {
+          food: response.data.food,
+          calories: response.data.calories.toString(),
+          confidence: response.data.confidence.toString(),
+          photoUrl: capturedImage.uri,
+        },
+      })
     } catch (error) {
       setAnalyzing(false)
-      console.error("Error processing image:", error)
-      Alert.alert("Error", "Failed to process image")
+      console.error("Error analyzing image:", error)
+      
+      const errorMessage = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.message || "Failed to analyze image"
+        : error instanceof Error
+          ? error.message
+          : "Failed to analyze image"
+
+      Alert.alert("Analysis Failed", "Could not analyze the food. Would you like to log it manually?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log Manually",
+          onPress: () => router.push("./logmeal"),
+        },
+      ])
     }
   }
 
@@ -163,7 +180,7 @@ export default function Camera() {
         </View>
 
         <View style={styles.previewContainer}>
-          <Image source={{ uri: capturedImage }} style={styles.preview} resizeMode="contain" />
+          <Image source={{ uri: capturedImage.uri }} style={styles.preview} resizeMode="contain" />
         </View>
 
         <View style={styles.actions}>
@@ -179,7 +196,7 @@ export default function Camera() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.manualButton} onPress={() => router.push("./(tabs)/log-meal")}>
+          <TouchableOpacity style={styles.manualButton} onPress={() => router.push("./logmeal")}>
             <Text style={styles.manualButtonText}>Log Manually Instead</Text>
           </TouchableOpacity>
         </View>
