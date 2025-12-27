@@ -1,6 +1,4 @@
-"use client"
-
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "./useAuth"
 import type { Database } from "@/lib/database.types"
@@ -17,30 +15,35 @@ export function useMeals(date?: Date) {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
 
-  const targetDate = date || new Date()
+  // Memoize targetDate to prevent unnecessary re-renders
+  const targetDate = useMemo(() => {
+    if (date) {
+      // Normalize to start of day for comparison
+      const normalized = new Date(date)
+      normalized.setHours(0, 0, 0, 0)
+      return normalized
+    }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return today
+  }, [date ? date.getTime() : null])
 
   // Load cached meals on mount
   useEffect(() => {
+    const loadCachedMeals = async () => {
+      try {
+        const cached = await AsyncStorage.getItem(MEALS_CACHE_KEY)
+        if (cached) {
+          setMeals(JSON.parse(cached))
+        }
+        // Don't set loading to false here - let fetchMeals handle it
+        // This ensures we always fetch fresh data when user is available
+      } catch (error) {
+        console.error("Error loading cached meals:", error)
+      }
+    }
     loadCachedMeals()
   }, [])
-
-  // Fetch meals from Supabase
-  useEffect(() => {
-    if (user) {
-      fetchMeals()
-    }
-  }, [user, targetDate])
-
-  const loadCachedMeals = async () => {
-    try {
-      const cached = await AsyncStorage.getItem(MEALS_CACHE_KEY)
-      if (cached) {
-        setMeals(JSON.parse(cached))
-      }
-    } catch (error) {
-      console.error("Error loading cached meals:", error)
-    }
-  }
 
   const cacheMeals = async (mealsToCache: Meal[]) => {
     try {
@@ -50,32 +53,49 @@ export function useMeals(date?: Date) {
     }
   }
 
-  const fetchMeals = async () => {
-    if (!user) return
-
-    setLoading(true)
-    const startOfDay = new Date(targetDate)
-    startOfDay.setHours(0, 0, 0, 0)
-    const endOfDay = new Date(targetDate)
-    endOfDay.setHours(23, 59, 59, 999)
-
-    const { data, error } = await supabase
-      .from("meals")
-      .select("*")
-      .eq("user_id", user.id)
-      .gte("logged_at", startOfDay.toISOString())
-      .lte("logged_at", endOfDay.toISOString())
-      .order("logged_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching meals:", error)
-    } else if (data) {
-      setMeals(data)
-      cacheMeals(data)
+  const fetchMeals = useCallback(async () => {
+    if (!user) {
+      setLoading(false)
+      setMeals([])
+      return
     }
 
-    setLoading(false)
-  }
+    try {
+      setLoading(true)
+      const startOfDay = new Date(targetDate)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(targetDate)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      const { data, error } = await supabase
+        .from("meals")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("logged_at", startOfDay.toISOString())
+        .lte("logged_at", endOfDay.toISOString())
+        .order("logged_at", { ascending: false })
+
+      if (error) {
+        console.error("Error fetching meals:", error)
+        // Keep cached meals on error
+      } else if (data) {
+        setMeals(data)
+        cacheMeals(data)
+      } else {
+        setMeals([])
+      }
+    } catch (err) {
+      console.error("Unexpected error in fetchMeals:", err)
+      // Keep cached meals on unexpected error
+    } finally {
+      setLoading(false)
+    }
+  }, [user, targetDate])
+
+  // Fetch meals from Supabase
+  useEffect(() => {
+    fetchMeals()
+  }, [fetchMeals])
 
   const addMeal = async (meal: Omit<MealInsert, "user_id">) => {
     if (!user) return { error: new Error("No user logged in") }

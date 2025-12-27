@@ -1,7 +1,9 @@
 export const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const
 export type MealType = (typeof MEAL_TYPES)[number]
 
-export const COLORS = {
+export type ColorScheme = "light" | "dark"
+
+export const lightColors = {
   primary: "#10b981",
   primaryDark: "#059669",
   secondary: "#3b82f6",
@@ -13,6 +15,22 @@ export const COLORS = {
   success: "#10b981",
   border: "#e5e7eb",
 }
+
+export const darkColors = {
+  primary: "#10b981",
+  primaryDark: "#059669",
+  secondary: "#3b82f6",
+  background: "#111827",
+  surface: "#1f2937",
+  text: "#f9fafb",
+  textSecondary: "#9ca3af",
+  error: "#ef4444",
+  success: "#10b981",
+  border: "#374151",
+}
+
+// Legacy export for backward compatibility
+export const COLORS = lightColors
 
 export const MEAL_TYPE_LABELS: Record<MealType, string> = {
   breakfast: "Breakfast",

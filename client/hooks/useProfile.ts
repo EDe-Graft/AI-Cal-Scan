@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "./useAuth"
 import type { Database } from "../lib/database.types"
@@ -10,26 +10,52 @@ export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile()
+  const fetchProfile = useCallback(async () => {
+    if (!user) {
+      setLoading(false)
+      setProfile(null)
+      return
+    }
+
+    try {
+      setLoading(true)
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+
+      if (error) {
+        console.error("Error fetching profile:", error)
+        setProfile(null)
+      } else if (data) {
+        setProfile(data)
+      } else {
+        // Profile doesn't exist, create it
+        const { data: newProfile, error: createError } = await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            email: user.email || "",
+            daily_calorie_goal: 2000,
+          })
+          .select()
+          .single()
+
+        if (createError) {
+          console.error("Error creating profile:", createError)
+          setProfile(null)
+        } else {
+          setProfile(newProfile)
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error in fetchProfile:", err)
+      setProfile(null)
+    } finally {
+      setLoading(false)
     }
   }, [user])
 
-  const fetchProfile = async () => {
-    if (!user) return
-
-    setLoading(true)
-    const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-
-    if (error) {
-      console.error("Error fetching profile:", error)
-    } else {
-      setProfile(data)
-    }
-
-    setLoading(false)
-  }
+  useEffect(() => {
+    fetchProfile()
+  }, [fetchProfile])
 
   const updateCalorieGoal = async (goal: number) => {
     if (!user) return { error: new Error("No user logged in") }

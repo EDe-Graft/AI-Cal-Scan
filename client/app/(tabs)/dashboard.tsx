@@ -2,18 +2,20 @@
 
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native"
 import { useRouter } from "expo-router"
+import { Ionicons } from "@expo/vector-icons"
 import { useMeals } from "@/hooks/useMeals"
 import { useProfile } from "@/hooks/useProfile"
 import { useAuth } from "@/hooks/useAuth"
+import { useTheme } from "@/hooks/useTheme"
 import { ProgressRing } from "@/components/ProgressRing"
 import { MealCard } from "@/components/MealCard"
-import { COLORS } from "@/constants/theme"
 
 export default function Dashboard() {
   const router = useRouter()
   const { signOut } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const { meals, loading, deleteMeal, refetch, getTotalCalories } = useMeals()
+  const { colors, colorScheme, toggleTheme } = useTheme()
 
   const totalCalories = getTotalCalories()
   const calorieGoal = profile?.daily_calorie_goal || 2000
@@ -31,63 +33,68 @@ export default function Dashboard() {
 
   if (loading || profileLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View>
-          <Text style={styles.greeting}>Today's Progress</Text>
-          <Text style={styles.date}>
+          <Text style={[styles.greeting, { color: colors.text }]}>Today's Progress</Text>
+          <Text style={[styles.date, { color: colors.textSecondary }]}>
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
           </Text>
         </View>
-        <TouchableOpacity onPress={handleSignOut}>
-          <Text style={styles.signOutButton}>Sign Out</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
+            <Ionicons name={colorScheme === "dark" ? "sunny" : "moon"} size={24} color={colors.text} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleSignOut}>
+            <Text style={[styles.signOutButton, { color: colors.error }]}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor={COLORS.primary} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor={colors.primary} />}
       >
         <View style={styles.progressSection}>
           <ProgressRing progress={progress} current={totalCalories} goal={calorieGoal} />
 
           <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{remaining}</Text>
-              <Text style={styles.statLabel}>Remaining</Text>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{remaining}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Remaining</Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{meals.length}</Text>
-              <Text style={styles.statLabel}>Meals</Text>
+            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{meals.length}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Meals</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.actionsSection}>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => router.push("./camera")}>
+          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={() => router.push("./camera")}>
             <Text style={styles.primaryButtonText}>📸 Take Photo</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push("./log-meal")}>
-            <Text style={styles.secondaryButtonText}>✏️ Log Manually</Text>
+          <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: colors.surface, borderColor: colors.primary }]} onPress={() => router.push("./logmeal")}>
+            <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>✏️ Log Manually</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.mealsSection}>
-          <Text style={styles.sectionTitle}>Today's Meals</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Today's Meals</Text>
 
           {meals.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No meals logged yet</Text>
-              <Text style={styles.emptyStateSubtext}>Start by taking a photo or logging manually</Text>
+            <View style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.emptyStateText, { color: colors.text }]}>No meals logged yet</Text>
+              <Text style={[styles.emptyStateSubtext, { color: colors.textSecondary }]}>Start by taking a photo or logging manually</Text>
             </View>
           ) : (
             <View style={styles.mealsList}>
@@ -105,37 +112,38 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.background,
   },
   header: {
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
-    backgroundColor: COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  themeToggle: {
+    padding: 4,
+  },
   greeting: {
     fontSize: 28,
     fontWeight: "bold",
-    color: COLORS.text,
   },
   date: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     marginTop: 4,
   },
   signOutButton: {
-    color: COLORS.error,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -157,28 +165,23 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 20,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   statValue: {
     fontSize: 32,
     fontWeight: "bold",
-    color: COLORS.primary,
   },
   statLabel: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     marginTop: 4,
   },
   actionsSection: {
     gap: 12,
   },
   primaryButton: {
-    backgroundColor: COLORS.primary,
     borderRadius: 16,
     padding: 18,
     alignItems: "center",
@@ -189,15 +192,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   secondaryButton: {
-    backgroundColor: COLORS.surface,
     borderWidth: 2,
-    borderColor: COLORS.primary,
     borderRadius: 16,
     padding: 18,
     alignItems: "center",
   },
   secondaryButtonText: {
-    color: COLORS.primary,
     fontSize: 18,
     fontWeight: "600",
   },
@@ -207,28 +207,23 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    color: COLORS.text,
   },
   mealsList: {
     gap: 12,
   },
   emptyState: {
-    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 40,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   emptyStateText: {
     fontSize: 18,
     fontWeight: "600",
-    color: COLORS.text,
     marginBottom: 8,
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     textAlign: "center",
   },
 })

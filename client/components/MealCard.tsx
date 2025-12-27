@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native"
-import { COLORS, MEAL_TYPE_LABELS, MEAL_TYPE_EMOJIS } from "../lib/constants"
+import { MEAL_TYPE_LABELS, MEAL_TYPE_EMOJIS } from "../lib/constants"
+import { useTheme } from "@/hooks/useTheme"
 import type { Database } from "../lib/database.types"
 
 type Meal = Database["public"]["Tables"]["meals"]["Row"]
@@ -10,6 +11,7 @@ interface MealCardProps {
 }
 
 export function MealCard({ meal, onDelete }: MealCardProps) {
+  const { colors } = useTheme()
   const time = new Date(meal.logged_at).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -27,32 +29,32 @@ export function MealCard({ meal, onDelete }: MealCardProps) {
   }
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.header}>
         <View style={styles.mealTypeContainer}>
           <Text style={styles.emoji}>{MEAL_TYPE_EMOJIS[meal.meal_type]}</Text>
-          <Text style={styles.mealType}>{MEAL_TYPE_LABELS[meal.meal_type]}</Text>
+          <Text style={[styles.mealType, { color: colors.textSecondary }]}>{MEAL_TYPE_LABELS[meal.meal_type]}</Text>
         </View>
-        <Text style={styles.time}>{time}</Text>
+        <Text style={[styles.time, { color: colors.textSecondary }]}>{time}</Text>
       </View>
 
-      <Text style={styles.foodName}>{meal.food_name}</Text>
+      <Text style={[styles.foodName, { color: colors.text }]}>{meal.food_name}</Text>
 
       <View style={styles.footer}>
         <View style={styles.calorieContainer}>
-          <Text style={styles.calories}>{meal.calories}</Text>
-          <Text style={styles.calorieLabel}>calories</Text>
+          <Text style={[styles.calories, { color: colors.primary }]}>{meal.calories}</Text>
+          <Text style={[styles.calorieLabel, { color: colors.textSecondary }]}>calories</Text>
         </View>
 
         {meal.confidence_score && (
-          <View style={styles.confidenceBadge}>
-            <Text style={styles.confidenceText}>AI: {(meal.confidence_score * 100).toFixed(0)}%</Text>
+          <View style={[styles.confidenceBadge, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }]}>
+            <Text style={[styles.confidenceText, { color: colors.textSecondary }]}>AI: {(meal.confidence_score * 100).toFixed(0)}%</Text>
           </View>
         )}
 
         {onDelete && (
           <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-            <Text style={styles.deleteText}>Delete</Text>
+            <Text style={[styles.deleteText, { color: colors.error }]}>Delete</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -62,11 +64,9 @@ export function MealCard({ meal, onDelete }: MealCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   header: {
     flexDirection: "row",
@@ -85,17 +85,14 @@ const styles = StyleSheet.create({
   mealType: {
     fontSize: 14,
     fontWeight: "600",
-    color: COLORS.textSecondary,
     textTransform: "capitalize",
   },
   time: {
     fontSize: 14,
-    color: COLORS.textSecondary,
   },
   foodName: {
     fontSize: 18,
     fontWeight: "600",
-    color: COLORS.text,
     marginBottom: 12,
   },
   footer: {
@@ -111,21 +108,17 @@ const styles = StyleSheet.create({
   calories: {
     fontSize: 24,
     fontWeight: "bold",
-    color: COLORS.primary,
   },
   calorieLabel: {
     fontSize: 14,
-    color: COLORS.textSecondary,
   },
   confidenceBadge: {
-    backgroundColor: "#dbeafe",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
   confidenceText: {
     fontSize: 12,
-    color: "#1e40af",
     fontWeight: "600",
   },
   deleteButton: {
@@ -134,7 +127,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   deleteText: {
-    color: COLORS.error,
     fontSize: 14,
     fontWeight: "600",
   },

@@ -3,11 +3,13 @@
 import { Tabs, useRouter } from "expo-router"
 import { useEffect } from "react"
 import { useAuth } from "../../hooks/useAuth"
+import { useTheme } from "../../hooks/useTheme"
 import { Ionicons } from "@expo/vector-icons"
 
 export default function AuthLayout() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const { colors } = useTheme()
 
   useEffect(() => {
     if (!loading && !user) {
@@ -23,12 +25,12 @@ export default function AuthLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#10b981",
-        tabBarInactiveTintColor: "#6b7280",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: "#ffffff",
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: "#e5e7eb",
+          borderTopColor: colors.border,
           paddingBottom: 5,
           paddingTop: 5,
           height: 60,

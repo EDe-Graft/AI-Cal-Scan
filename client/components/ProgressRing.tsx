@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from "react-native"
 import Svg, { Circle } from "react-native-svg"
-import { COLORS } from "@/lib/constants"
+import { useTheme } from "@/hooks/useTheme"
 
 interface ProgressRingProps {
   progress: number // 0 to 1
@@ -11,6 +11,7 @@ interface ProgressRingProps {
 }
 
 export function ProgressRing({ progress, size = 200, strokeWidth = 16, current, goal }: ProgressRingProps) {
+  const { colors } = useTheme()
   const radius = (size - strokeWidth) / 2
   const circumference = radius * 2 * Math.PI
   const strokeDashoffset = circumference - progress * circumference
@@ -19,10 +20,10 @@ export function ProgressRing({ progress, size = 200, strokeWidth = 16, current, 
     <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={size} height={size}>
         {/* Background circle */}
-        <Circle stroke={COLORS.border} fill="none" cx={size / 2} cy={size / 2} r={radius} strokeWidth={strokeWidth} />
+        <Circle stroke={colors.border} fill="none" cx={size / 2} cy={size / 2} r={radius} strokeWidth={strokeWidth} />
         {/* Progress circle */}
         <Circle
-          stroke={COLORS.primary}
+          stroke={colors.primary}
           fill="none"
           cx={size / 2}
           cy={size / 2}
@@ -35,8 +36,8 @@ export function ProgressRing({ progress, size = 200, strokeWidth = 16, current, 
         />
       </Svg>
       <View style={styles.textContainer}>
-        <Text style={styles.currentText}>{current}</Text>
-        <Text style={styles.goalText}>/ {goal} cal</Text>
+        <Text style={[styles.currentText, { color: colors.text }]}>{current}</Text>
+        <Text style={[styles.goalText, { color: colors.textSecondary }]}>/ {goal} cal</Text>
       </View>
     </View>
   )
@@ -54,11 +55,9 @@ const styles = StyleSheet.create({
   currentText: {
     fontSize: 36,
     fontWeight: "bold",
-    color: COLORS.text,
   },
   goalText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     marginTop: 4,
   },
 })
