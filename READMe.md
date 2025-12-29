@@ -25,7 +25,9 @@ AI-powered calorie tracker built with React Native & computer vision
 
 <div align="center">
 
-**Dashboard with Progress Ring** | **Camera Scan** | **AI Results & Log Form** | **More UI Concepts**
+| **Dashboard with Progress Ring** | **Camera Scan** | **AI Results & Log Form** | **Meal History** |
+|----------------------------------|-----------------|---------------------------|------------------|
+| ![Dashboard](https://via.placeholder.com/300x600/1e293b/ffffff?text=Dashboard%0AProgress+Ring+%26+Meals) | ![Camera](https://via.placeholder.com/300x600/3b82f6/ffffff?text=Camera%0AScan+Your+Meal) | ![Log Meal](https://via.placeholder.com/300x600/10b981/ffffff?text=AI+Results%0AFood+%26+Calories+%26+Confidence) | ![Meal History](https://via.placeholder.com/300x600/8b5cf6/ffffff?text=Today%27s+Meals%0ADelete+%26+View) |
 
 </div>
 
