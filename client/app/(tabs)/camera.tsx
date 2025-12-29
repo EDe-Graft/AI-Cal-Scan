@@ -111,10 +111,10 @@ export default function Camera() {
       }
 
       // Use axios for API call
-      console.log("making api call")
+      console.log("Making api call")
 
       const test = await axios.get(`${API_URL}/health`)
-      console.log(test)
+      console.log("Testing API health", test.data)
 
       const response = await axios.post<{ food: string; calories: number; confidence: number }>(
         `${API_URL}/api/analyze-food`,
@@ -128,6 +128,7 @@ export default function Camera() {
         }
       )
 
+      console.log("Image analyzed successfully. Auto filled log meal sections")
       setAnalyzing(false)
 
       // Navigate to log meal with AI results
