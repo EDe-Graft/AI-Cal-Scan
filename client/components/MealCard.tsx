@@ -46,6 +46,11 @@ export function MealCard({ meal, onDelete }: MealCardProps) {
           <Text style={[styles.calorieLabel, { color: colors.textSecondary }]}>calories</Text>
         </View>
 
+        <View style={styles.calorieContainer}>
+          <Text style={[styles.calories, { color: colors.primary }]}>{meal.servings}</Text>
+          <Text style={[styles.calorieLabel, { color: colors.textSecondary }]}>serving</Text>
+        </View>
+
         {meal.confidence_score && (
           <View style={[styles.confidenceBadge, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }]}>
             <Text style={[styles.confidenceText, { color: colors.textSecondary }]}>AI: {(meal.confidence_score * 100).toFixed(0)}%</Text>
