@@ -116,7 +116,7 @@ export default function Camera() {
       const test = await axios.get(`${API_URL}/health`)
       console.log("Testing API health", test.data)
 
-      const response = await axios.post<{ food: string; calories: number; confidence: number }>(
+      const response = await axios.post<{ food: string; calories: number; servings: number, confidence: number }>(
         `${API_URL}/api/analyze-food`,
         {
           image: base64data,
@@ -137,6 +137,7 @@ export default function Camera() {
         params: {
           food: response.data.food,
           calories: response.data.calories.toString(),
+          servings: response.data.servings.toString(),
           confidence: response.data.confidence.toString(),
           photoUrl: capturedImage.uri,
         },

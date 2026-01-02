@@ -31,6 +31,7 @@ export interface Database {
           user_id: string
           food_name: string
           calories: number
+          servings: number
           meal_type: "breakfast" | "lunch" | "dinner" | "snack"
           photo_url: string | null
           confidence_score: number | null
@@ -42,6 +43,7 @@ export interface Database {
           user_id: string
           food_name: string
           calories: number
+          servings: number
           meal_type: "breakfast" | "lunch" | "dinner" | "snack"
           photo_url?: string | null
           confidence_score?: number | null
@@ -51,6 +53,7 @@ export interface Database {
         Update: {
           food_name?: string
           calories?: number
+          servings?: number
           meal_type?: "breakfast" | "lunch" | "dinner" | "snack"
           photo_url?: string | null
           confidence_score?: number | null

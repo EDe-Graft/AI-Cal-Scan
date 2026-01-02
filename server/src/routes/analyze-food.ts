@@ -36,6 +36,7 @@ interface AnalyzeFoodRequest {
 interface AnalyzeFoodResponse {
   food: string
   calories: number
+  servings: number
   confidence: number
 }
 
@@ -65,14 +66,15 @@ async function analyzeFoodImage(image: string): Promise<AnalyzeFoodResponse> {
                 type: "text",
                 text: `Analyze this food image and provide:
 1. The name of the food (be specific)
-2. Estimated total calories (as a number)
-3. Your confidence level (0.0 to 1.0)
+2. Estimated total calories per serving (as a number)
+3. Estimated number of servings (as a number)
+4. Your confidence level (0.0 to 1.0)
 
 Respond ONLY with valid JSON in this exact format:
-{"food": "food name", "calories": 123, "confidence": 0.85}
+{"food": "food name", "calories": 123, "servings": 123, "confidence": 0.85}
 
 If you cannot identify the food with reasonable confidence, respond with:
-{"food": "unknown food", "calories": 0, "confidence": 0.0}`,
+{"food": "unknown food", "calories": 0, "servings": 0, "confidence": 0.0}`,
               },
               {
                 type: "image_url",
@@ -105,7 +107,7 @@ If you cannot identify the food with reasonable confidence, respond with:
     console.log("AI Analysis Result: ", result)
 
     // Validate the response
-    if (!result.food || typeof result.calories !== "number" || typeof result.confidence !== "number") {
+    if (!result.food || typeof result.calories !== "number" || typeof result.servings != "number" || typeof result.confidence !== "number") {
       throw new Error("Invalid response format from AI");
     }
 

@@ -16,18 +16,20 @@ export default function LogMeal() {
   // If coming from camera with AI results
   const aiFood = params.food as string | undefined
   const aiCalories = params.calories as string | undefined
+  const aiServings = params.servings as string | undefined
   const aiConfidence = params.confidence as string | undefined
   const photoUrl = params.photoUrl as string | undefined
 
   const [foodName, setFoodName] = useState(aiFood || "")
   const [calories, setCalories] = useState(aiCalories || "")
+  const [servings, setServings] = useState(aiServings || "")
   const [selectedMealType, setSelectedMealType] = useState<MealType>("breakfast")
   const [loading, setLoading] = useState(false)
 
   const { addMeal } = useMeals()
 
   const handleSaveMeal = async () => {
-    if (!foodName || !calories) {
+    if (!foodName || !calories || !servings) {
       Alert.alert("Error", "Please fill in all fields")
       return
     }
@@ -38,11 +40,18 @@ export default function LogMeal() {
       return
     }
 
+    const servingSize = Number.parseInt(servings)
+    if (isNaN(servingSize) || servingSize < 0) {
+      Alert.alert("Error", "Please enter a valid serving size")
+      return
+    }
+
     setLoading(true)
 
     const { error } = await addMeal({
       food_name: foodName,
       calories: calorieNum,
+      servings: servingSize,
       meal_type: selectedMealType,
       photo_url: photoUrl || null,
       confidence_score: aiConfidence ? Number.parseFloat(aiConfidence) : null,
@@ -90,13 +99,25 @@ export default function LogMeal() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Calories</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Calories Per Serving</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               placeholder="e.g., 320"
               placeholderTextColor={colors.textSecondary}
               value={calories}
               onChangeText={setCalories}
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Serving Size</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+              placeholder="e.g., 1"
+              placeholderTextColor={colors.textSecondary}
+              value={servings}
+              onChangeText={setServings}
               keyboardType="numeric"
             />
           </View>
