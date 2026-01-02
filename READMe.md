@@ -2,7 +2,7 @@
 
 # 🥗 AI-Cal-Scan
 **Snap a photo. Know your calories instantly.**  
-AI-powered calorie tracker built with React Native & computer vision
+Built a React Native calorie-tracking app using computer vision to estimate food calories from images, with offline support and AI confidence-based correction workflows.
 
 [![Expo](https://img.shields.io/badge/Expo-46-orange.svg)](https://expo.dev)
 [![React Native](https://img.shields.io/badge/React_Native-0.75-blue.svg)](https://reactnative.dev)
